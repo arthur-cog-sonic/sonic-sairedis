@@ -70,28 +70,29 @@ jobs:
   - checkout: self
     clean: true
     submodules: true
-  - task: DownloadPipelineArtifact@2
-    condition: eq('${{ parameters.arch }}', 'amd64')
-    inputs:
-      source: specific
-      project: build
-      pipeline: Azure.sonic-buildimage.common_libs
-      runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/$(BUILD_BRANCH)'
-      path: $(Build.ArtifactStagingDirectory)/download
-      artifact: common-lib
-      patterns: |
-          target/debs/${{ parameters.debian_version }}/libnl-3*.deb
-          target/debs/${{ parameters.debian_version }}/libnl-genl*.deb
-          target/debs/${{ parameters.debian_version }}/libnl-route*.deb
-          target/debs/${{ parameters.debian_version }}/libnl-nf*.deb
-    displayName: "Download libnl from common_libs"
-  - script: |
-      set -ex
-      sudo dpkg -i $(find ./download -name libnl-*_${{ parameters.arch }}.deb)
-    condition: eq('${{ parameters.arch }}', 'amd64')
-    workingDirectory: $(Build.ArtifactStagingDirectory)
-    displayName: "Install sonic libnl"
+  # External pipeline downloads commented out - pipelines not available in Cisco-SONiC-PoC org
+  # - task: DownloadPipelineArtifact@2
+  #   condition: eq('${{ parameters.arch }}', 'amd64')
+  #   inputs:
+  #     source: specific
+  #     project: build
+  #     pipeline: Azure.sonic-buildimage.common_libs
+  #     runVersion: 'latestFromBranch'
+  #     runBranch: 'refs/heads/$(BUILD_BRANCH)'
+  #     path: $(Build.ArtifactStagingDirectory)/download
+  #     artifact: common-lib
+  #     patterns: |
+  #         target/debs/${{ parameters.debian_version }}/libnl-3*.deb
+  #         target/debs/${{ parameters.debian_version }}/libnl-genl*.deb
+  #         target/debs/${{ parameters.debian_version }}/libnl-route*.deb
+  #         target/debs/${{ parameters.debian_version }}/libnl-nf*.deb
+  #   displayName: "Download libnl from common_libs"
+  # - script: |
+  #     set -ex
+  #     sudo dpkg -i $(find ./download -name libnl-*_${{ parameters.arch }}.deb)
+  #   condition: eq('${{ parameters.arch }}', 'amd64')
+  #   workingDirectory: $(Build.ArtifactStagingDirectory)
+  #   displayName: "Install sonic libnl"
   - script: |
       set -ex
       sudo apt-get update
@@ -132,65 +133,66 @@ jobs:
 
     condition: ne('${{ parameters.arch }}', 'amd64')
     displayName: "Install libnl for arm dependencies"
-  - task: DownloadPipelineArtifact@2
-    # amd64 artifact name does not has arch suffix
-    condition: eq('${{ parameters.arch }}', 'amd64')
-    inputs:
-      source: specific
-      project: build
-      pipeline: Azure.sonic-buildimage.common_libs
-      runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/$(BUILD_BRANCH)'
-      path: $(Build.ArtifactStagingDirectory)/download
-      artifact: common-lib
-      patterns: |
-        target/debs/${{ parameters.debian_version }}/libyang_*.deb
-    displayName: "Download libyang from amd64 common lib"
-  - task: DownloadPipelineArtifact@2
-    condition: ne('${{ parameters.arch }}', 'amd64')
-    inputs:
-      source: specific
-      project: build
-      pipeline: Azure.sonic-buildimage.common_libs
-      runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/$(BUILD_BRANCH)'
-      path: $(Build.ArtifactStagingDirectory)/download
-      artifact: common-lib.${{ parameters.arch }}
-      patterns: |
-        target/debs/${{ parameters.debian_version }}/libyang_*.deb
-    displayName: "Download libyang from common lib"
-  - script: |
-      set -ex
-      sudo dpkg -i $(find ./download -name *.deb)
-    workingDirectory: $(Build.ArtifactStagingDirectory)
-    displayName: "Install libyang from common lib"
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      source: specific
-      project: build
-      pipeline: sonic-net.sonic-platform-vpp
-      artifact: vpp
-      runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/main'
-      allowPartiallySucceededBuilds: true
-      path: $(Build.ArtifactStagingDirectory)/download
-    displayName: "Download sonic platform-vpp deb packages"
-    condition: eq('${{ parameters.arch }}', 'amd64')
-  - script: |
-      set -ex
-      sudo dpkg -i download/libvppinfra-dev_*_${{ parameters.arch }}.deb
-      sudo dpkg -i download/libvppinfra_*_${{ parameters.arch }}.deb
-      sudo dpkg -i download/vpp_*_${{ parameters.arch }}.deb
-      sudo dpkg -i download/vpp-crypto-engines_*_${{ parameters.arch }}.deb
-      sudo dpkg -i download/vpp-dbg_*_${{ parameters.arch }}.deb
-      sudo dpkg -i download/vpp-dev_*_${{ parameters.arch }}.deb
-      sudo dpkg -i download/vpp-plugin-core_*_${{ parameters.arch }}.deb
-      sudo dpkg -i download/vpp-plugin-devtools_*_${{ parameters.arch }}.deb
-      sudo dpkg -i download/vpp-plugin-dpdk_*_${{ parameters.arch }}.deb
-      sudo dpkg -i download/python3-vpp-api_*_${{ parameters.arch }}.deb
-    workingDirectory: $(Build.ArtifactStagingDirectory)
-    displayName: "Install sonic platform-vpp packages"
-    condition: eq('${{ parameters.arch }}', 'amd64')
+  # External pipeline downloads commented out - pipelines not available in Cisco-SONiC-PoC org
+  # - task: DownloadPipelineArtifact@2
+  #   # amd64 artifact name does not has arch suffix
+  #   condition: eq('${{ parameters.arch }}', 'amd64')
+  #   inputs:
+  #     source: specific
+  #     project: build
+  #     pipeline: Azure.sonic-buildimage.common_libs
+  #     runVersion: 'latestFromBranch'
+  #     runBranch: 'refs/heads/$(BUILD_BRANCH)'
+  #     path: $(Build.ArtifactStagingDirectory)/download
+  #     artifact: common-lib
+  #     patterns: |
+  #       target/debs/${{ parameters.debian_version }}/libyang_*.deb
+  #   displayName: "Download libyang from amd64 common lib"
+  # - task: DownloadPipelineArtifact@2
+  #   condition: ne('${{ parameters.arch }}', 'amd64')
+  #   inputs:
+  #     source: specific
+  #     project: build
+  #     pipeline: Azure.sonic-buildimage.common_libs
+  #     runVersion: 'latestFromBranch'
+  #     runBranch: 'refs/heads/$(BUILD_BRANCH)'
+  #     path: $(Build.ArtifactStagingDirectory)/download
+  #     artifact: common-lib.${{ parameters.arch }}
+  #     patterns: |
+  #       target/debs/${{ parameters.debian_version }}/libyang_*.deb
+  #   displayName: "Download libyang from common lib"
+  # - script: |
+  #     set -ex
+  #     sudo dpkg -i $(find ./download -name *.deb)
+  #   workingDirectory: $(Build.ArtifactStagingDirectory)
+  #   displayName: "Install libyang from common lib"
+  # - task: DownloadPipelineArtifact@2
+  #   inputs:
+  #     source: specific
+  #     project: build
+  #     pipeline: sonic-net.sonic-platform-vpp
+  #     artifact: vpp
+  #     runVersion: 'latestFromBranch'
+  #     runBranch: 'refs/heads/main'
+  #     allowPartiallySucceededBuilds: true
+  #     path: $(Build.ArtifactStagingDirectory)/download
+  #   displayName: "Download sonic platform-vpp deb packages"
+  #   condition: eq('${{ parameters.arch }}', 'amd64')
+  # - script: |
+  #     set -ex
+  #     sudo dpkg -i download/libvppinfra-dev_*_${{ parameters.arch }}.deb
+  #     sudo dpkg -i download/libvppinfra_*_${{ parameters.arch }}.deb
+  #     sudo dpkg -i download/vpp_*_${{ parameters.arch }}.deb
+  #     sudo dpkg -i download/vpp-crypto-engines_*_${{ parameters.arch }}.deb
+  #     sudo dpkg -i download/vpp-dbg_*_${{ parameters.arch }}.deb
+  #     sudo dpkg -i download/vpp-dev_*_${{ parameters.arch }}.deb
+  #     sudo dpkg -i download/vpp-plugin-core_*_${{ parameters.arch }}.deb
+  #     sudo dpkg -i download/vpp-plugin-devtools_*_${{ parameters.arch }}.deb
+  #     sudo dpkg -i download/vpp-plugin-dpdk_*_${{ parameters.arch }}.deb
+  #     sudo dpkg -i download/python3-vpp-api_*_${{ parameters.arch }}.deb
+  #   workingDirectory: $(Build.ArtifactStagingDirectory)
+  #   displayName: "Install sonic platform-vpp packages"
+  #   condition: eq('${{ parameters.arch }}', 'amd64')
   - task: DownloadPipelineArtifact@2
     inputs:
       source: specific
