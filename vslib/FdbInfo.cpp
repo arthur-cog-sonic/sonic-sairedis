@@ -56,7 +56,8 @@ const sai_fdb_entry_t& FdbInfo::getFdbEntry() const
     return m_fdbEntry;
 }
 
-uint32_t FdbInfo::getTimestamp() const
+/* Y2K38 Fix: Changed return type from uint32_t to uint64_t */
+uint64_t FdbInfo::getTimestamp() const
 {
     SWSS_LOG_ENTER();
 
@@ -160,8 +161,9 @@ void FdbInfo::setBridgePortId(
     m_bridgePortId = portId;
 }
 
+/* Y2K38 Fix: Changed parameter type from uint32_t to uint64_t */
 void FdbInfo::setTimestamp(
-        _In_ uint32_t timestamp)
+        _In_ uint64_t timestamp)
 {
     SWSS_LOG_ENTER();
 
