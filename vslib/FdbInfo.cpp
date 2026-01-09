@@ -99,7 +99,12 @@ FdbInfo FdbInfo::deserialize(
     sai_deserialize_vlan_id(j["vlan_id"], fi.m_vlanId);
     sai_deserialize_object_id(j["bridge_port_id"], fi.m_bridgePortId);
     sai_deserialize_fdb_entry(j["fdb_entry"], fi.m_fdbEntry);
-    sai_deserialize_number(j["timestamp"], fi.m_timestamp);
+    /* Y2K38 Fix: Use uint32_t temp variable for deserialization, then assign to uint64_t
+     * This maintains backward compatibility with existing serialized data while
+     * allowing the internal representation to be 64-bit for future timestamps */
+    uint32_t timestamp32;
+    sai_deserialize_number(j["timestamp"], timestamp32);
+    fi.m_timestamp = timestamp32;
 
     return fi;
 }
