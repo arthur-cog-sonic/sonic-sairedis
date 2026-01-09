@@ -35,7 +35,8 @@ namespace saivs
 
             const sai_fdb_entry_t& getFdbEntry() const;
 
-            uint32_t getTimestamp() const;
+            /* Y2K38 Fix: Changed from uint32_t to uint64_t for timestamp safety */
+            uint64_t getTimestamp() const;
 
         public: // sets
 
@@ -51,8 +52,9 @@ namespace saivs
             void setBridgePortId(
                     _In_ const sai_object_id_t portId);
 
+            /* Y2K38 Fix: Changed from uint32_t to uint64_t for timestamp safety */
             void setTimestamp(
-                    _In_ uint32_t timestamp);
+                    _In_ uint64_t timestamp);
 
         public: // serialize
 
@@ -80,6 +82,7 @@ namespace saivs
 
             sai_fdb_entry_t m_fdbEntry;
 
-            uint32_t m_timestamp;
+            /* Y2K38 Fix: Changed from uint32_t to uint64_t for timestamp safety */
+            uint64_t m_timestamp;
     };
 }

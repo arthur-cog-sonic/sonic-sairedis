@@ -56,7 +56,8 @@ const sai_fdb_entry_t& FdbInfo::getFdbEntry() const
     return m_fdbEntry;
 }
 
-uint32_t FdbInfo::getTimestamp() const
+/* Y2K38 Fix: Changed return type from uint32_t to uint64_t */
+uint64_t FdbInfo::getTimestamp() const
 {
     SWSS_LOG_ENTER();
 
@@ -98,7 +99,12 @@ FdbInfo FdbInfo::deserialize(
     sai_deserialize_vlan_id(j["vlan_id"], fi.m_vlanId);
     sai_deserialize_object_id(j["bridge_port_id"], fi.m_bridgePortId);
     sai_deserialize_fdb_entry(j["fdb_entry"], fi.m_fdbEntry);
-    sai_deserialize_number(j["timestamp"], fi.m_timestamp);
+    /* Y2K38 Fix: Use uint32_t temp variable for deserialization, then assign to uint64_t
+     * This maintains backward compatibility with existing serialized data while
+     * allowing the internal representation to be 64-bit for future timestamps */
+    uint32_t timestamp32;
+    sai_deserialize_number(j["timestamp"], timestamp32);
+    fi.m_timestamp = timestamp32;
 
     return fi;
 }
@@ -160,8 +166,9 @@ void FdbInfo::setBridgePortId(
     m_bridgePortId = portId;
 }
 
+/* Y2K38 Fix: Changed parameter type from uint32_t to uint64_t */
 void FdbInfo::setTimestamp(
-        _In_ uint32_t timestamp)
+        _In_ uint64_t timestamp)
 {
     SWSS_LOG_ENTER();
 
