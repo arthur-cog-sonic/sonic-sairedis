@@ -56,7 +56,7 @@ const sai_fdb_entry_t& FdbInfo::getFdbEntry() const
     return m_fdbEntry;
 }
 
-uint32_t FdbInfo::getTimestamp() const
+uint64_t FdbInfo::getTimestamp() const
 {
     SWSS_LOG_ENTER();
 
@@ -161,7 +161,7 @@ void FdbInfo::setBridgePortId(
 }
 
 void FdbInfo::setTimestamp(
-        _In_ uint32_t timestamp)
+        _In_ uint64_t timestamp)
 {
     SWSS_LOG_ENTER();
 

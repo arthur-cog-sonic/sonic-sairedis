@@ -35,7 +35,7 @@ namespace saivs
 
             const sai_fdb_entry_t& getFdbEntry() const;
 
-            uint32_t getTimestamp() const;
+            uint64_t getTimestamp() const;
 
         public: // sets
 
@@ -52,7 +52,7 @@ namespace saivs
                     _In_ const sai_object_id_t portId);
 
             void setTimestamp(
-                    _In_ uint32_t timestamp);
+                    _In_ uint64_t timestamp);
 
         public: // serialize
 
@@ -80,6 +80,6 @@ namespace saivs
 
             sai_fdb_entry_t m_fdbEntry;
 
-            uint32_t m_timestamp;
+            uint64_t m_timestamp;
     };
 }
