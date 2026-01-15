@@ -7,6 +7,7 @@
 
 #include <unistd.h>
 #include <inttypes.h>
+#include <ctime>
 
 #include <cstring>
 #include <vector>
@@ -260,16 +261,18 @@ std::string Recorder::getTimestamp()
     SWSS_LOG_ENTER();
 
     char buffer[64];
-    struct timeval tv;
+    struct timespec ts;
 
-    gettimeofday(&tv, NULL);
+    // Use clock_gettime for Y2038-safe timestamp handling
+    clock_gettime(CLOCK_REALTIME, &ts);
 
     struct tm now;
-    localtime_r(&tv.tv_sec, &now);
+    localtime_r(&ts.tv_sec, &now);
 
     size_t size = strftime(buffer, 32, "%Y-%m-%d.%T.", &now);
 
-    snprintf(&buffer[size], 32, "%06ld", tv.tv_usec);
+    // Convert nanoseconds to microseconds for output format compatibility
+    snprintf(&buffer[size], 32, "%06ld", ts.tv_nsec / 1000);
 
     return std::string(buffer);
 }
