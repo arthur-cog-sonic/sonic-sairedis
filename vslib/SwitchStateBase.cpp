@@ -2940,7 +2940,8 @@ void SwitchStateBase::processFdbEntriesForAging()
 
     SWSS_LOG_DEBUG("fdb infos to process: %zu", m_fdb_info_set.size());
 
-    uint32_t current = (uint32_t)time(NULL);
+    // Use 64-bit timestamp to avoid Y2038 overflow
+    uint64_t current = static_cast<uint64_t>(time(NULL));
 
     sai_attribute_t attr;
 
