@@ -145,6 +145,90 @@ TEST(FdbInfo, operator_bracket)
     EXPECT_EQ(a.operator()(b,a), false);
 }
 
+// Y2038 timestamp overflow tests - verify 64-bit timestamp handling
+TEST(FdbInfo, setTimestamp_Y2038_LargeValue)
+{
+    FdbInfo info;
+
+    // Test value beyond 32-bit signed max (2^31 - 1 = 2147483647)
+    // This is the Y2038 overflow point
+    uint64_t y2038_overflow = 2147483648ULL;  // 2^31
+    info.setTimestamp(y2038_overflow);
+
+    EXPECT_EQ(info.getTimestamp(), y2038_overflow);
+}
+
+TEST(FdbInfo, setTimestamp_Y2038_MaxUint32)
+{
+    FdbInfo info;
+
+    // Test value at 32-bit unsigned max (2^32 - 1 = 4294967295)
+    uint64_t max_uint32 = 4294967295ULL;
+    info.setTimestamp(max_uint32);
+
+    EXPECT_EQ(info.getTimestamp(), max_uint32);
+}
+
+TEST(FdbInfo, setTimestamp_Y2038_Beyond32Bit)
+{
+    FdbInfo info;
+
+    // Test value beyond 32-bit range (2^32 + 1000)
+    uint64_t beyond_32bit = 4294968295ULL;
+    info.setTimestamp(beyond_32bit);
+
+    EXPECT_EQ(info.getTimestamp(), beyond_32bit);
+}
+
+TEST(FdbInfo, serialize_Y2038_LargeTimestamp)
+{
+    FdbInfo fdb;
+
+    // Set timestamp beyond Y2038 overflow point
+    uint64_t large_timestamp = 5000000000ULL;  // ~2128 year
+    fdb.setTimestamp(large_timestamp);
+
+    auto str = fdb.serialize();
+
+    // Verify the serialized string contains the large timestamp
+    EXPECT_NE(str.find("\"timestamp\":\"5000000000\""), std::string::npos);
+}
+
+TEST(FdbInfo, deserialize_Y2038_LargeTimestamp)
+{
+    // Test deserializing a timestamp beyond 32-bit range
+    std::string str =
+            "{\"bridge_port_id\":\"oid:0x1\","
+            "\"fdb_entry\":\"{\\\"bvid\\\":\\\"oid:0x0\\\",\\\"mac\\\":\\\"00:00:00:00:00:00\\\",\\\"switch_id\\\":\\\"oid:0x0\\\"}\","
+            "\"port_id\":\"oid:0x0\","
+            "\"timestamp\":\"5000000000\","
+            "\"vlan_id\":\"0\"}";
+
+    auto fdb = FdbInfo::deserialize(str);
+
+    EXPECT_EQ(fdb.getTimestamp(), 5000000000ULL);
+}
+
+TEST(FdbInfo, roundtrip_Y2038_LargeTimestamp)
+{
+    FdbInfo original;
+
+    // Set a timestamp far beyond Y2038
+    uint64_t future_timestamp = 10000000000ULL;  // ~2286 year
+    original.setTimestamp(future_timestamp);
+    original.setBridgePortId(1);
+    original.setVlanId(100);
+
+    // Serialize and deserialize
+    auto serialized = original.serialize();
+    auto deserialized = FdbInfo::deserialize(serialized);
+
+    // Verify timestamp survives round-trip
+    EXPECT_EQ(deserialized.getTimestamp(), future_timestamp);
+    EXPECT_EQ(deserialized.getBridgePortId(), 1);
+    EXPECT_EQ(deserialized.getVlanId(), 100);
+}
+
 TEST(FdbInfo, operator_lt)
 {
     std::string strA =
