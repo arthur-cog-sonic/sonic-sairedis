@@ -6,6 +6,28 @@
 
 using namespace saivs;
 
+// Y2038 Detection Signature Functions
+// These functions can be used to detect Y2038 overflow conditions
+
+// Y2038 overflow point: January 19, 2038 03:14:07 UTC
+constexpr uint64_t Y2038_OVERFLOW_POINT = 2147483647ULL;  // 2^31 - 1
+constexpr uint64_t ONE_YEAR_SECONDS = 31536000ULL;
+
+// Returns true if timestamp is within 1 year of Y2038 overflow
+static inline bool y2038_overflow_imminent(uint64_t timestamp) {
+    return (timestamp > Y2038_OVERFLOW_POINT - ONE_YEAR_SECONDS) && 
+           (timestamp <= Y2038_OVERFLOW_POINT);
+}
+
+// Returns true if timestamp has already passed the Y2038 overflow point
+static inline bool y2038_overflow_occurred(uint64_t timestamp) {
+    return timestamp > Y2038_OVERFLOW_POINT;
+}
+
+// Compile-time check that timestamp type is at least 64-bit
+#define Y2038_TIMESTAMP_CHECK(type) \
+    static_assert(sizeof(type) >= 8, "Y2038 WARNING: Timestamp type must be at least 64-bit")
+
 TEST(FdbInfo, getPortId)
 {
     FdbInfo fdb;
@@ -227,6 +249,88 @@ TEST(FdbInfo, roundtrip_Y2038_LargeTimestamp)
     EXPECT_EQ(deserialized.getTimestamp(), future_timestamp);
     EXPECT_EQ(deserialized.getBridgePortId(), 1);
     EXPECT_EQ(deserialized.getVlanId(), 100);
+}
+
+// Y2038 Detection Signature Tests
+TEST(Y2038Detection, overflow_imminent_before_danger_zone)
+{
+    // Timestamp well before Y2038 (year 2020)
+    uint64_t timestamp_2020 = 1577836800ULL;  // Jan 1, 2020
+    EXPECT_FALSE(y2038_overflow_imminent(timestamp_2020));
+}
+
+TEST(Y2038Detection, overflow_imminent_in_danger_zone)
+{
+    // Timestamp within 1 year of Y2038 overflow
+    uint64_t timestamp_danger = Y2038_OVERFLOW_POINT - 100;  // 100 seconds before overflow
+    EXPECT_TRUE(y2038_overflow_imminent(timestamp_danger));
+    
+    // Timestamp exactly at the start of danger zone (1 year before)
+    uint64_t timestamp_start_danger = Y2038_OVERFLOW_POINT - ONE_YEAR_SECONDS + 1;
+    EXPECT_TRUE(y2038_overflow_imminent(timestamp_start_danger));
+}
+
+TEST(Y2038Detection, overflow_imminent_at_boundary)
+{
+    // Timestamp exactly at Y2038 overflow point
+    EXPECT_TRUE(y2038_overflow_imminent(Y2038_OVERFLOW_POINT));
+    
+    // Timestamp just after Y2038 overflow (no longer imminent, already occurred)
+    EXPECT_FALSE(y2038_overflow_imminent(Y2038_OVERFLOW_POINT + 1));
+}
+
+TEST(Y2038Detection, overflow_occurred_before_y2038)
+{
+    // Timestamp before Y2038 overflow
+    uint64_t timestamp_2020 = 1577836800ULL;  // Jan 1, 2020
+    EXPECT_FALSE(y2038_overflow_occurred(timestamp_2020));
+    
+    // Timestamp exactly at Y2038 overflow point
+    EXPECT_FALSE(y2038_overflow_occurred(Y2038_OVERFLOW_POINT));
+}
+
+TEST(Y2038Detection, overflow_occurred_after_y2038)
+{
+    // Timestamp just after Y2038 overflow
+    EXPECT_TRUE(y2038_overflow_occurred(Y2038_OVERFLOW_POINT + 1));
+    
+    // Timestamp well after Y2038 (year 2100)
+    uint64_t timestamp_2100 = 4102444800ULL;
+    EXPECT_TRUE(y2038_overflow_occurred(timestamp_2100));
+    
+    // Timestamp far in the future
+    uint64_t timestamp_far_future = 10000000000ULL;
+    EXPECT_TRUE(y2038_overflow_occurred(timestamp_far_future));
+}
+
+TEST(Y2038Detection, compile_time_check)
+{
+    // Verify that uint64_t passes the compile-time check
+    Y2038_TIMESTAMP_CHECK(uint64_t);
+    
+    // Verify FdbInfo timestamp type is Y2038-safe
+    FdbInfo fdb;
+    Y2038_TIMESTAMP_CHECK(decltype(fdb.getTimestamp()));
+}
+
+TEST(Y2038Detection, detection_with_fdb_timestamp)
+{
+    FdbInfo fdb;
+    
+    // Set timestamp before Y2038
+    fdb.setTimestamp(1577836800ULL);  // Jan 1, 2020
+    EXPECT_FALSE(y2038_overflow_imminent(fdb.getTimestamp()));
+    EXPECT_FALSE(y2038_overflow_occurred(fdb.getTimestamp()));
+    
+    // Set timestamp in danger zone
+    fdb.setTimestamp(Y2038_OVERFLOW_POINT - 1000);
+    EXPECT_TRUE(y2038_overflow_imminent(fdb.getTimestamp()));
+    EXPECT_FALSE(y2038_overflow_occurred(fdb.getTimestamp()));
+    
+    // Set timestamp after Y2038
+    fdb.setTimestamp(Y2038_OVERFLOW_POINT + 1000);
+    EXPECT_FALSE(y2038_overflow_imminent(fdb.getTimestamp()));
+    EXPECT_TRUE(y2038_overflow_occurred(fdb.getTimestamp()));
 }
 
 TEST(FdbInfo, operator_lt)
