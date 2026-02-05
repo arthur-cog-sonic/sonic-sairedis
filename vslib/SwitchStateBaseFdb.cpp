@@ -395,7 +395,7 @@ void SwitchStateBase::process_packet_for_fdb_event(
     // we would need hostif info here and maybe interface index, then we can
     // find host info from index
 
-    uint32_t frametime = (uint32_t)time(NULL);
+    uint64_t frametime = (uint64_t)time(NULL);  // Y2038-safe: use 64-bit timestamp
 
     /*
      * We add +2 in case if frame contains 1Q VLAN tag.
